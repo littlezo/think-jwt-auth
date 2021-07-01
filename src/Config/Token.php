@@ -79,18 +79,18 @@ class Token
 	protected $type = 'Header';
 
 	/**
-	 * relogin_code.
+	 * expires_code.
 	 *
 	 * @var int
 	 */
-	protected $relogin_code = 50002;
+	protected $expires_code = 904010;
 
 	/**
 	 * refresh_code.
 	 *
 	 * @var int
 	 */
-	protected $refresh_code = 50001;
+	protected $refresh_code = 904011;
 
 	/**
 	 * iss.
@@ -265,11 +265,11 @@ class Token
 	}
 
 	/**
-	 * getReloginCode.
+	 * getExpiresCode.
 	 */
-	public function getReloginCode(): int
+	public function getExpiresCode(): int
 	{
-		return $this->relogin_code;
+		return $this->expires_code;
 	}
 
 	/**

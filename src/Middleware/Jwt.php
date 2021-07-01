@@ -55,12 +55,17 @@ class Jwt
 		if ($request->method(true) == 'OPTIONS') {
 			return Response::create()->code(204);
 		}
-
+		$ignore_verify = $request->rule()->getOption('ignore_verify')??false;
+		if ($ignore_verify) {
+			return $next($request);
+		}
 		if ($this->app->get('jwt')->store($store)->verify() === true) {
 			if ($this->app->get('jwt.user')->getBind()) {
 				if ($user = $this->app->get('jwt.user')->find()) {
 					// 路由注入
+					unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password);
 					$request->user = $user;
+					dd($user->toArray());
 					// 绑定当前用户模型
 					$class = $this->app->get('jwt.user')->getClass();
 					$this->app->bind($class, $user);
@@ -70,10 +75,8 @@ class Jwt
 					throw new JWTException('登录校验已失效, 请重新登录', 401);
 				}
 			}
-
 			return $next($request);
 		}
-
 		throw new JWTException('Token 验证不通过', 401);
 	}
 

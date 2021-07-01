@@ -60,6 +60,11 @@ class User
 		}
 	}
 
+	public function getModel()
+	{
+		return $this->config->getClass();
+	}
+
 	public function getBind()
 	{
 		return $this->config->getBind();
@@ -69,11 +74,11 @@ class User
 	{
 		$class = $this->getClass();
 		$token = $this->app->get('jwt.token')->getToken();
-		$uid = $token->claims()->get('jti');
+		$id = $token->claims()->get('jti');
 
 		$model = new $class();
 		if ($model instanceof AuthorizeInterface) {
-			return $model->getUserById($uid);
+			return $model->getUserById($id);
 		}
 		throw new JWTException('implements ' . AuthorizeInterface::class);
 	}

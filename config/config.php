@@ -31,31 +31,8 @@ return [
 				'refresh_ttL' => 7200,
 				'signer' => 'HS256',
 				'type' => 'Header',
-				'relogin_code' => 50001,
-				'refresh_code' => 50002,
-				'iss' => 'client.littler',
-				'aud' => 'server.littler',
-				'automatic_renewal' => false,
-			],
-			'user' => [
-				'bind' => false,
-				'class' => null,
-			],
-		],
-		// 多应用
-		'admin' => [
-			'sso' => [
-				'enable' => false,
-			],
-			'token' => [
-				'signer_key' => 'littler',
-				'not_before' => 0,
-				'expires_at' => 3600,
-				'refresh_ttL' => 7200,
-				'signer' => 'HS256',
-				'type' => 'Header',
-				'relogin_code' => 50001,
-				'refresh_code' => 50002,
+				'expires_code' => 904010,
+				'refresh_code' => 904011,
 				'iss' => 'client.littler',
 				'aud' => 'server.littler',
 				'automatic_renewal' => false,

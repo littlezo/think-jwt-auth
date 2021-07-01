@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace littler\JWTAuth\Service;
 
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Token\Plain;
 use littler\JWTAuth\Config\Manager as Config;
 use think\App;
 
@@ -58,7 +59,6 @@ class Manager
 		if ($this->app->get('jwt.sso')->getEnable()) {
 			$this->handleSSO($token);
 		}
-
 		$this->pushWhitelist($token);
 	}
 
@@ -87,7 +87,6 @@ class Manager
 		$type = $this->config->getWhitelist();
 		$tag = $store . '-' . $type;
 		$keys = $this->app->cache->getTagItems($tag);
-		// dd($keys);
 		foreach ($keys as $key) {
 			$handle = strtolower($this->app->config->get('cache.default'));
 			if ($handle == 'file') {
@@ -96,6 +95,10 @@ class Manager
 				$token = $this->app->cache->get($key);
 			}
 
+			// dd($token);
+			if (! $token) {
+				continue;
+			}
 			$token = $this->app->get('jwt.token')->parse($token);
 			if ($token->claims()->has('jti') && $token->claims()->get('jti') == $id) {
 				$this->pushBlacklist($token);
@@ -115,15 +118,15 @@ class Manager
 		$this->config = new Config($options);
 	}
 
-	protected function handleSSO(Token $token): void
+	protected function handleSSO(Plain $token): void
 	{
 		$jti = $token->claims()->get('jti');
 		$store = $token->claims()->get('store');
-
+		// dd($store);
 		$this->destroyToken($jti, $store);
 	}
 
-	protected function pushWhitelist(Token $token): void
+	protected function pushWhitelist(Plain $token): void
 	{
 		$jti = $token->claims()->get('jti');
 		$store = $token->claims()->get('store');
@@ -138,7 +141,7 @@ class Manager
 		$this->setCache($tag, $key, $token, $ttl);
 	}
 
-	protected function pushBlacklist(Token $token): void
+	protected function pushBlacklist(Plain $token): void
 	{
 		$jti = $token->claims()->get('jti');
 		$store = $token->claims()->get('store');
@@ -154,7 +157,7 @@ class Manager
 		$this->setCache($tag, $key, $token, $ttl);
 	}
 
-	protected function getBlacklist(Token $token)
+	protected function getBlacklist(Plain $token)
 	{
 		$jti = $token->claims()->get('jti');
 		$store = $token->claims()->get('store');

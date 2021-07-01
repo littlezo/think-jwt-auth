@@ -18,7 +18,11 @@ declare(strict_types=1);
 namespace littler\JWTAuth\Service;
 
 use Lcobucci\JWT\Token;
+use littler\BaseModel;
+use littler\exceptions\LoginFailedException;
+use littler\JWTAuth\Exception\JWTException;
 use littler\JWTAuth\Exception\TokenAlreadyEexpired;
+use littler\user\AuthorizeInterface;
 use think\App;
 
 class JwtAuth
@@ -42,11 +46,62 @@ class JwtAuth
 	 */
 	protected $user;
 
+	/**
+	 * model.
+	 *
+	 * @var BaseModel
+	 */
+	protected $model;
+
+	/**
+	 * @var string
+	 */
+	protected $username= 'username';
+
+	/**
+	 * @var string
+	 */
+	protected $password = 'password';
+
+	/**
+	 * @var bool
+	 */
+	protected $verifyPassword = true;
+
 	public function __construct(App $app)
 	{
 		$this->app = $app;
 
 		$this->init();
+	}
+
+	public function username(string $username = null): self
+	{
+		if ($username) {
+			$this->username = $username;
+		}
+
+		return $this;
+	}
+
+	public function password(string $password = null): self
+	{
+		if ($password) {
+			$this->password = $password;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * 忽略密码认证
+	 *
+	 * @return $this
+	 */
+	public function ignorePasswordVerify(): self
+	{
+		$this->verifyPassword = false;
+		return $this;
 	}
 
 	public function store(string $store = null): self
@@ -71,6 +126,7 @@ class JwtAuth
 	public function token($identifier, array $claims = []): Token
 	{
 		$token = $this->app->get('jwt.token')->make($identifier, $claims);
+		// dd($token);
 		// dd($this->app->get('jwt.manager')->login($token));
 		$this->app->get('jwt.manager')->login($token);
 
@@ -91,6 +147,7 @@ class JwtAuth
 
 		// 是否存在黑名单
 		$this->wasBan($token);
+		// dd($token);
 
 		// 检测合法性
 		if ($service->validate($token)) {
@@ -98,6 +155,44 @@ class JwtAuth
 		}
 
 		return false;
+	}
+
+	// public function login(array $args)
+	// {
+	// 	$service = $this->app->get('jwt.token');
+	// 	return $args;
+	// }
+
+	public function login(array $args): string
+	{
+		$this->user($args);
+		$user = $this->user;
+		// dd($user::$disable);
+		if (! $user) {
+			throw new LoginFailedException('登录失败，请检查用户名或密码', 900900);
+		}
+		if ($user->status == $user::$disable) {
+			throw new LoginFailedException('该用户已被禁用|' . $user->username ?? null, 900901);
+		}
+		// dd($this->verifyPassword&&! password_verify($args['password'], $user->password));
+		if ($this->verifyPassword && ! password_verify($args['password'], $user->password)) {
+			throw new LoginFailedException('登录失败,密码错误', 900902);
+		}
+		unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password,$user->{$this->password});
+		// dd($user->getFields());
+		return $this->token($user->{$user->getAutoPk()}, $user->toArray())->toString();
+	}
+
+	public function user($args)
+	{
+		$this->getModel();
+		// dd($this->filter($args));
+		$condition = $this->filter($args);
+		if (! $condition||$this->verifyPassword &&  ! isset($args['password'])) {
+			throw new LoginFailedException('登录失败，参数错误', 900900);
+		}
+		$this->user = $this->model->getUser($condition);
+		return $this;
 	}
 
 	public function logout(string $token = null)
@@ -111,13 +206,43 @@ class JwtAuth
 		$this->app->get('jwt.manager')->logout($token);
 	}
 
-	public function user()
+	/**
+	 * @param $condition
+	 */
+	protected function filter($condition): array
 	{
-		return $this->app->get('jwt.user')->find();
+		$this->getModel();
+		$where = [];
+		$fields = array_keys($this->model->getFields());
+		foreach ($condition as $field => $value) {
+			if (in_array($field, $fields, true) && $field === $this->username) {
+				$where[$field] = $value;
+			}
+		}
+		return $where;
 	}
 
 	protected function init()
 	{
+	}
+
+	protected function getModel()
+	{
+		try {
+			$class = $this->app->get('jwt.user')->getModel();
+			// dd($class);
+			$model = new $class();
+			if ($model instanceof AuthorizeInterface) {
+				$this->model =  $model;
+				return $this;
+			}
+			throw new JWTException('implements ' . AuthorizeInterface::class);
+		} catch (JWTException $e) {
+			throw new JWTException($e->getMessage());
+		} catch (\Exception $e) {
+			$store = $this->getStore();
+			throw new JWTException("{$store}应用未配置用户模型文件");
+		}
 	}
 
 	protected function getDefaultApp(): string
@@ -128,10 +253,11 @@ class JwtAuth
 	protected function wasBan($token)
 	{
 		$token = $this->app->get('jwt.token')->parse($token);
+		// dd($token);
 		if ($this->app->get('jwt.manager')->wasBan($token) === true) {
 			$config = $this->app->get('jwt.token')->getConfig();
 
-			throw new TokenAlreadyEexpired('token was ban', $config->getReloginCode());
+			throw new TokenAlreadyEexpired('token was ban', $config->getExpiresCode());
 		}
 	}
 }

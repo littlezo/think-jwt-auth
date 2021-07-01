@@ -45,8 +45,8 @@ return [
                 'refresh_ttL'   => 7200,
                 'signer'       => 'HS256',
                 'type'         => 'Header',
-                'relogin_code'      => 50001,
-                'refresh_code'      => 50002,
+                'expires_code'      => 904010,
+                'refresh_code'      => 904011,
                 'iss'          => 'client.littler',
                 'aud'          => 'server.littler',
                 'automatic_renewal' => false,
@@ -68,8 +68,8 @@ return [
                 'refresh_ttL'   => 7200,
                 'signer'       => 'HS256',
                 'type'         => 'Header',
-                'relogin_code'      => 50001,
-                'refresh_code'      => 50002,
+                'expires_code'      => 904010,
+                'refresh_code'      => 904011,
                 'iss'          => 'client.littler',
                 'aud'          => 'server.littler',
                 'automatic_renewal' => false,
@@ -124,7 +124,7 @@ return [
 > 重要：RSA 和 DSA 都是非对称加密方式，除了修改参数 SIGNER 外，需要配置：PUBLIC_KEY、PRIVATE_KEY 两个参数，
 
 - `type` 获取 Token 途径
-- `relogin_code` Token 过期抛异常 code = 50001
+- `expires_code` Token 过期抛异常 code = 50001
 - `refresh_code` Token 失效异常 code = 50002
 - `automatic_renewal` [开启过期自动续签](#过期自动续签)
 

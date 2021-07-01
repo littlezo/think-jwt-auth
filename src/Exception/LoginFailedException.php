@@ -17,27 +17,9 @@ declare(strict_types=1);
 
 namespace littler\JWTAuth\Exception;
 
-use Exception;
-use think\exception\HttpException;
-
 /**
- * 验证异常.
+ * Token 登录失败.
  */
-class JWTException extends HttpException
+class LoginFailedException extends JWTException
 {
-	// public function __construct(string $message, $code = 0)
-	// {
-	// 	parent::__construct(401, $message, null, [], $code);
-	// }
-	protected const HTTP_SUCCESS = 404;
-
-	public function __construct(string $message = '', int $code = 0, $statusCode = 0, array $headers = [], Exception $previous = null)
-	{
-		parent::__construct($statusCode, $message ?: $this->getMessage(), $previous, $headers, $code);
-	}
-
-	public function getStatusCode()
-	{
-		return self::HTTP_SUCCESS;
-	}
 }
