@@ -217,7 +217,8 @@ class Token
 
 	public function getExpires(): int
 	{
-		return $this->expires_at;
+		// dd($this->expires_at);
+		return (int) $this->expires_at;
 	}
 
 	/**

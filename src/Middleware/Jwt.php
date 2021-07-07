@@ -65,7 +65,7 @@ class Jwt
 					// 路由注入
 					unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password);
 					$request->user = $user;
-					dd($user->toArray());
+					// dd($user->toArray());
 					// 绑定当前用户模型
 					$class = $this->app->get('jwt.user')->getClass();
 					$this->app->bind($class, $user);

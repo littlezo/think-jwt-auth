@@ -167,6 +167,8 @@ class JwtAuth
 	{
 		$this->user($args);
 		$user = $this->user;
+		// dd($user);
+
 		// dd($user::$disable);
 		if (! $user) {
 			throw new LoginFailedException('登录失败，请检查用户名或密码', 900900);
@@ -186,12 +188,13 @@ class JwtAuth
 	public function user($args)
 	{
 		$this->getModel();
-		// dd($this->filter($args));
 		$condition = $this->filter($args);
 		if (! $condition||$this->verifyPassword &&  ! isset($args['password'])) {
 			throw new LoginFailedException('登录失败，参数错误', 900900);
 		}
-		$this->user = $this->model->getUser($condition);
+		if ($this->model->hasUser($condition)) {
+			$this->user = $this->model->getUser($condition);
+		}
 		return $this;
 	}
 
