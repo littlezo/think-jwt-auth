@@ -59,25 +59,28 @@ class Jwt
 		if ($ignore_verify) {
 			return $next($request);
 		}
-		if ($this->app->get('jwt')->store($store)->verify() === true) {
-			if ($this->app->get('jwt.user')->getBind()) {
-				if ($user = $this->app->get('jwt.user')->find()) {
-					// 路由注入
-					unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password);
-					$request->user = $user;
-					// dd($user->toArray());
-					// 绑定当前用户模型
-					$class = $this->app->get('jwt.user')->getClass();
-					$this->app->bind($class, $user);
-					// 绑定用户后一些业务处理
-					$this->bindUserAfter($request);
-				} else {
-					throw new JWTException('登录校验已失效, 请重新登录', 401);
+		try {
+			if ($this->app->get('jwt')->store($store)->verify() === true) {
+				if ($this->app->get('jwt.user')->getBind()) {
+					if ($user = $this->app->get('jwt.user')->find()) {
+						// 路由注入
+						unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password);
+						$request->user = $user;
+						// 绑定当前用户模型
+						$class = $this->app->get('jwt.user')->getClass();
+						$this->app->bind($class, $user);
+						// 绑定用户后一些业务处理
+						$this->bindUserAfter($request);
+					} else {
+						throw new JWTException('登录校验已失效, 请重新登录', 401);
+					}
 				}
+				return $next($request);
 			}
-			return $next($request);
+			throw new JWTException('Token 验证不通过', 401);
+		} catch (\Throwable $e) {
+			throw new JWTException('Token 验证不通过', 401);
 		}
-		throw new JWTException('Token 验证不通过', 401);
 	}
 
 	/**

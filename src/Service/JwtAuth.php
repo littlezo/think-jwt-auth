@@ -104,7 +104,7 @@ class JwtAuth
 		return $this;
 	}
 
-	public function store(string $store = null): self
+	public function store(string $store = 'default'): self
 	{
 		if ($store) {
 			$this->store = $store;
@@ -165,9 +165,9 @@ class JwtAuth
 
 	public function login(array $args): string
 	{
+		// dd($this->user($args));
 		$this->user($args);
 		$user = $this->user;
-		// dd($user);
 
 		// dd($user::$disable);
 		if (! $user) {
