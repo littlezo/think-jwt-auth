@@ -203,8 +203,8 @@ class Token
 	 */
 	public function automaticRenewalToken(JwtToken $token)
 	{
+		dd($token);
 		$claims = $token->claims()->all();
-
 		$jti = $claims['jti'];
 		unset($claims['aud'], $claims['iss'], $claims['jti'], $claims['iat'], $claims['nbf'], $claims['exp'], $claims['sub']);
 

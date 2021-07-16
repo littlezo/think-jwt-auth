@@ -29,7 +29,7 @@ class JWTException extends HttpException
 	// {
 	// 	parent::__construct(401, $message, null, [], $code);
 	// }
-	protected const HTTP_SUCCESS = 404;
+	protected const HTTP_SUCCESS = 401;
 
 	public function __construct(string $message = '', int $code = 0, $statusCode = 0, array $headers = [], Exception $previous = null)
 	{

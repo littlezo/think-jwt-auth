@@ -56,9 +56,11 @@ class Jwt
 			return Response::create()->code(204);
 		}
 		$ignore_verify = $request->rule()->getOption('ignore_verify')??false;
+		// $ignore_verify = true;
 		if ($ignore_verify) {
 			return $next($request);
 		}
+		// return $this->app->get('jwt.token')->automaticRenewalToken();
 		try {
 			if ($this->app->get('jwt')->store($store)->verify() === true) {
 				if ($this->app->get('jwt.user')->getBind()) {
