@@ -126,8 +126,6 @@ class JwtAuth
 	public function token($identifier, array $claims = []): Token
 	{
 		$token = $this->app->get('jwt.token')->make($identifier, $claims);
-		// dd($token);
-		// dd($this->app->get('jwt.manager')->login($token));
 		$this->app->get('jwt.manager')->login($token);
 
 		return $token;
@@ -147,7 +145,6 @@ class JwtAuth
 
 		// 是否存在黑名单
 		$this->wasBan($token);
-		// dd($token);
 
 		// 检测合法性
 		if ($service->validate($token)) {
@@ -157,31 +154,21 @@ class JwtAuth
 		return false;
 	}
 
-	// public function login(array $args)
-	// {
-	// 	$service = $this->app->get('jwt.token');
-	// 	return $args;
-	// }
-
 	public function login(array $args): string
 	{
-		// dd($this->user($args));
 		$this->user($args);
 		$user = $this->user;
 
-		// dd($user::$disable);
 		if (! $user) {
 			throw new LoginFailedException('登录失败，请检查用户名或密码', 900900);
 		}
 		if ($user->status == $user::$disable) {
 			throw new LoginFailedException('该用户已被禁用|' . $user->username ?? null, 900901);
 		}
-		// dd($this->verifyPassword&&! password_verify($args['password'], $user->password));
-		if ($this->verifyPassword && ! password_verify($args['password'], $user->password)) {
+		if ($this->verifyPassword && ! password_verify($args['password'], $this->user->getOrigin()['password'])) {
 			throw new LoginFailedException('登录失败,密码错误', 900902);
 		}
 		unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password,$user->{$this->password});
-		// dd($user->getFields());
 		return $this->token($user->{$user->getAutoPk()}, $user->toArray())->toString();
 	}
 
@@ -209,6 +196,8 @@ class JwtAuth
 		$this->app->get('jwt.manager')->logout($token);
 	}
 
+	// Todo 等待优化
+
 	/**
 	 * @param $condition
 	 */
@@ -222,6 +211,7 @@ class JwtAuth
 				$where[$field] = $value;
 			}
 		}
+		// dd($where);
 		return $where;
 	}
 
@@ -256,7 +246,6 @@ class JwtAuth
 	protected function wasBan($token)
 	{
 		$token = $this->app->get('jwt.token')->parse($token);
-		// dd($token);
 		if ($this->app->get('jwt.manager')->wasBan($token) === true) {
 			$config = $this->app->get('jwt.token')->getConfig();
 
