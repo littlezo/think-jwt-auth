@@ -15,13 +15,13 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Facade;
+namespace littler\jwt\Facade;
 
 use think\Facade;
 
 /**
- * @see \littler\JWTAuth\Service\Jwt
- * @mixin \littler\JWTAuth\Service\Jwt
+ * @see \littler\jwt\Service\Jwt
+ * @mixin \littler\jwt\Service\Jwt
  */
 class Jwt extends Facade
 {
@@ -32,6 +32,6 @@ class Jwt extends Facade
 	 */
 	protected static function getFacadeClass()
 	{
-		return \littler\JWTAuth\Service\JwtAuth::class;
+		return \littler\jwt\Service\JwtAuth::class;
 	}
 }

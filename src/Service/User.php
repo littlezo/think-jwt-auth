@@ -15,10 +15,10 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Service;
+namespace littler\jwt\Service;
 
-use littler\JWTAuth\Config\User as Config;
-use littler\JWTAuth\Exception\JWTException;
+use littler\jwt\Config\User as Config;
+use littler\jwt\Exception\JWTException;
 use littler\User\AuthorizeInterface;
 use think\App;
 

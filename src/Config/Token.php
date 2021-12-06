@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Config;
+namespace littler\jwt\Config;
 
 use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256 as ES256;
@@ -32,7 +32,7 @@ use Lcobucci\JWT\Signer\Rsa;
 use Lcobucci\JWT\Signer\Rsa\Sha256 as RS256;
 use Lcobucci\JWT\Signer\Rsa\Sha384 as RS384;
 use Lcobucci\JWT\Signer\Rsa\Sha512 as RS512;
-use littler\JWTAuth\Exception\JWTException;
+use littler\jwt\Exception\JWTException;
 
 class Token
 {

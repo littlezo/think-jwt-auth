@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Command;
+namespace littler\jwt\Command;
 
 use Nette\PhpGenerator\Dumper;
 use Nette\PhpGenerator\PhpFile;

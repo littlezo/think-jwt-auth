@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Handle;
+namespace littler\jwt\Handle;
 
 class Cookie extends RequestToken
 {

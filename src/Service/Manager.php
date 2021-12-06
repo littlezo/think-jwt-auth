@@ -15,11 +15,11 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Service;
+namespace littler\jwt\Service;
 
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Plain;
-use littler\JWTAuth\Config\Manager as Config;
+use littler\jwt\Config\Manager as Config;
 use think\App;
 
 class Manager

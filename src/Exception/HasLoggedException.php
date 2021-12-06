@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Exception;
+namespace littler\jwt\Exception;
 
 /**
  * Token 已在其它终端登录.

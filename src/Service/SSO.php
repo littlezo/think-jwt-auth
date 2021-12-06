@@ -15,9 +15,9 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Service;
+namespace littler\jwt\Service;
 
-use littler\JWTAuth\Config\SSO as Config;
+use littler\jwt\Config\SSO as Config;
 use think\App;
 
 class SSO

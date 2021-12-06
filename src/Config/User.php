@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Config;
+namespace littler\jwt\Config;
 
 class User
 {

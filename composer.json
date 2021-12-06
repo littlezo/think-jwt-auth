@@ -1,8 +1,7 @@
 {
-  "name": "littler/jwt-auth",
+  "name": "littler/think-jwt",
   "description": "ThinkPHP6 Jwt",
   "type": "library",
-  "minimum-stability": "stable",
   "homepage": "https://github.com/littlezo",
   "license": "MPL-2.0",
   "authors": [
@@ -16,26 +15,21 @@
     "jwt-auth"
   ],
   "require": {
-    "php": ">=7.4.0",
+    "php": "^7.4 || ^8.0",
     "ext-json": "*",
+    "ext-redis": "*",
     "ext-mbstring": "*",
     "lcobucci/jwt": "^4.1.0",
     "nette/php-generator": "^3.5.0",
     "topthink/framework": "^6.0",
-    "littler/user": "dev-main"
+    "littler/think-user": "dev-main"
   },
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../../../package/*/*"
-    }
-  ],
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.0"
   },
   "autoload": {
     "psr-4": {
-      "littler\\JWTAuth\\": "src"
+      "littler\\jwt\\": "src"
     },
     "files": [
       "src/helper.php"

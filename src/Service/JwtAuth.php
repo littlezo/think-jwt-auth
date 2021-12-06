@@ -15,13 +15,13 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Service;
+namespace littler\jwt\Service;
 
 use Lcobucci\JWT\Token;
 use littler\BaseModel;
 use littler\exceptions\LoginFailedException;
-use littler\JWTAuth\Exception\JWTException;
-use littler\JWTAuth\Exception\TokenAlreadyEexpired;
+use littler\jwt\Exception\JWTException;
+use littler\jwt\Exception\TokenAlreadyEexpired;
 use littler\user\AuthorizeInterface;
 use think\App;
 

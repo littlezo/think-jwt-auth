@@ -15,9 +15,9 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Middleware;
+namespace littler\jwt\Middleware;
 
-use littler\JWTAuth\Exception\JWTException;
+use littler\jwt\Exception\JWTException;
 use think\App;
 use think\Response;
 

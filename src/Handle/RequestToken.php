@@ -15,9 +15,9 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Handle;
+namespace littler\jwt\Handle;
 
-use littler\JWTAuth\Exception\JWTException;
+use littler\jwt\Exception\JWTException;
 use think\App;
 
 class RequestToken

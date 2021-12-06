@@ -15,28 +15,28 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth;
+namespace littler\jwt;
 
-use littler\JWTAuth\Command\JwtCommand;
-use littler\JWTAuth\Service\JwtAuth;
-use littler\JWTAuth\Service\Manager;
-use littler\JWTAuth\Service\SSO;
-use littler\JWTAuth\Service\Token;
-use littler\JWTAuth\Service\User;
+use littler\jwt\Command\JwtCommand;
+use littler\jwt\Service\JwtAuth;
+use littler\jwt\Service\Manager;
+use littler\jwt\Service\SSO;
+use littler\jwt\Service\Token;
+use littler\jwt\Service\User;
 
 class Service extends \think\Service
 {
-	public function register(): void
-	{
-		$this->app->bind('jwt', JwtAuth::class);
-		$this->app->bind('jwt.manager', Manager::class);
-		$this->app->bind('jwt.token', Token::class);
-		$this->app->bind('jwt.sso', SSO::class);
-		$this->app->bind('jwt.user', User::class);
-	}
+    public function register(): void
+    {
+        $this->app->bind('jwt', JwtAuth::class);
+        $this->app->bind('jwt.manager', Manager::class);
+        $this->app->bind('jwt.token', Token::class);
+        $this->app->bind('jwt.sso', SSO::class);
+        $this->app->bind('jwt.user', User::class);
+    }
 
-	public function boot(): void
-	{
-		$this->commands(JwtCommand::class);
-	}
+    public function boot(): void
+    {
+        $this->commands(JwtCommand::class);
+    }
 }

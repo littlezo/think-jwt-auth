@@ -141,8 +141,8 @@ return [
 
 以下两个异常都会抛一个 HTTP 异常 StatusCode = 401
 
-- `littler\JWTAuth\Exception\HasLoggedException`
-- `littler\JWTAuth\Exception\TokenAlreadyEexpired`
+- `littler\jwt\Exception\HasLoggedException`
+- `littler\jwt\Exception\TokenAlreadyEexpired`
 
 ### 缓存支持
 
@@ -154,7 +154,7 @@ return [
 ```php
 namespace app\api\controller\Auth;
 
-use littler\JWTAuth\Facade\Jwt;
+use littler\jwt\Facade\Jwt;
 
 public function login()
 {
@@ -179,9 +179,9 @@ public function login()
 ### 手动验证
 
 ```php
-use littler\JWTAuth\Facade\Jwt;
-use littler\JWTAuth\Exception\HasLoggedException;
-use littler\JWTAuth\Exception\TokenAlreadyEexpired;
+use littler\jwt\Facade\Jwt;
+use littler\jwt\Exception\HasLoggedException;
+use littler\jwt\Exception\TokenAlreadyEexpired;
 
 class User {
 
@@ -202,7 +202,7 @@ class User {
 ### 路由验证
 
 ```php
-use littler\JWTAuth\Middleware\Jwt;
+use littler\jwt\Middleware\Jwt;
 
 // 自动获取当前应用配置
 Route::get('/hello', 'index/index')->middleware(Jwt::class);

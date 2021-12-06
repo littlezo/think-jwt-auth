@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\JWTAuth\Service;
+namespace littler\jwt\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -25,9 +25,9 @@ use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Token as JwtToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Constraint\ValidAt;
-use littler\JWTAuth\Config\Token as Config;
-use littler\JWTAuth\Exception\JWTException;
-use littler\JWTAuth\Handle\RequestToken;
+use littler\jwt\Config\Token as Config;
+use littler\jwt\Exception\JWTException;
+use littler\jwt\Handle\RequestToken;
 use think\App;
 
 class Token
