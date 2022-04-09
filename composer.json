@@ -22,7 +22,7 @@
         "lcobucci/jwt": "^4.1.0",
         "nette/php-generator": "^3.5.0",
         "topthink/framework": "^6.0",
-        "littler/think-user": "dev-main"
+        "littler/think-user": "^0.0.2"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0"
