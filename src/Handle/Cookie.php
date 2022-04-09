@@ -19,8 +19,8 @@ namespace littler\jwt\Handle;
 
 class Cookie extends RequestToken
 {
-	public function handle(): string
-	{
-		return $this->app->cookie->get('token');
-	}
+    public function handle(): string
+    {
+        return $this->app->cookie->get('token');
+    }
 }

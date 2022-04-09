@@ -22,52 +22,52 @@ use think\App;
 
 class SSO
 {
-	/**
-	 * @var App
-	 */
-	protected $app;
+    /**
+     * @var App
+     */
+    protected $app;
 
-	/**
-	 * @var Config
-	 */
-	protected $config;
+    /**
+     * @var Config
+     */
+    protected $config;
 
-	public function __construct(App $app)
-	{
-		$this->app = $app;
+    public function __construct(App $app)
+    {
+        $this->app = $app;
 
-		$this->init();
-	}
+        $this->init();
+    }
 
-	/**
-	 * @var Config
-	 */
-	public function getConfig()
-	{
-		return $this->config;
-	}
+    /**
+     * @var Config
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
 
-	public function getEnable(): bool
-	{
-		return $this->config->getEnable();
-	}
+    public function getEnable(): bool
+    {
+        return $this->config->getEnable();
+    }
 
-	protected function init()
-	{
-		$options = $this->resolveConfig();
+    protected function init()
+    {
+        $options = $this->resolveConfig();
 
-		$this->config = new Config($options);
-	}
+        $this->config = new Config($options);
+    }
 
-	protected function getStore(): string
-	{
-		return $this->app->get('jwt')->getStore();
-	}
+    protected function getStore(): string
+    {
+        return $this->app->get('jwt')->getStore();
+    }
 
-	protected function resolveConfig(): array
-	{
-		$store = $this->getStore();
+    protected function resolveConfig(): array
+    {
+        $store = $this->getStore();
 
-		return $this->app->config->get("jwt.stores.{$store}.sso", []);
-	}
+        return $this->app->config->get("jwt.stores.{$store}.sso", []);
+    }
 }

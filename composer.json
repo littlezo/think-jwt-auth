@@ -1,51 +1,51 @@
 {
-  "name": "littler/think-jwt",
-  "description": "ThinkPHP6 Jwt",
-  "type": "library",
-  "homepage": "https://github.com/littlezo",
-  "license": "MPL-2.0",
-  "authors": [
-    {
-      "name": "@小小只^v^",
-      "email": "littlezov@qq.com"
-    }
-  ],
-  "keywords": [
-    "Jwt",
-    "jwt-auth"
-  ],
-  "require": {
-    "php": "^7.4 || ^8.0",
-    "ext-json": "*",
-    "ext-redis": "*",
-    "ext-mbstring": "*",
-    "lcobucci/jwt": "^4.1.0",
-    "nette/php-generator": "^3.5.0",
-    "topthink/framework": "^6.0",
-    "littler/think-user": "dev-main"
-  },
-  "require-dev": {
-    "friendsofphp/php-cs-fixer": "^3.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "littler\\jwt\\": "src"
+    "name": "littler/think-jwt",
+    "description": "ThinkPHP6 Jwt",
+    "type": "library",
+    "homepage": "https://github.com/littlezo",
+    "license": "MPL-2.0",
+    "authors": [
+        {
+            "name": "@小小只^v^",
+            "email": "littlezov@qq.com"
+        }
+    ],
+    "keywords": [
+        "Jwt",
+        "jwt-auth"
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "ext-json": "*",
+        "ext-redis": "*",
+        "ext-mbstring": "*",
+        "lcobucci/jwt": "^4.1.0",
+        "nette/php-generator": "^3.5.0",
+        "topthink/framework": "^6.0",
+        "littler/think-user": "dev-main"
     },
-    "files": [
-      "src/helper.php"
-    ]
-  },
-  "extra": {
-    "think": {
-      "services": [
-        "littler\\JWTAuth\\Service"
-      ],
-      "config": {
-        "jwt": "config/config.php"
-      }
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "littler\\jwt\\": "src"
+        },
+        "files": [
+            "src/helper.php"
+        ]
+    },
+    "extra": {
+        "think": {
+            "services": [
+                "littler\\jwt\\Service"
+            ],
+            "config": {
+                "jwt": "config/config.php"
+            }
+        }
+    },
+    "scripts": {
+        "cs-fix": "vendor/bin/php-cs-fixer fix"
     }
-  },
-  "scripts": {
-    "cs-fix": "vendor/bin/php-cs-fixer fix"
-  }
 }

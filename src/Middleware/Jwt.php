@@ -19,6 +19,7 @@ namespace littler\jwt\Middleware;
 
 use littler\jwt\Exception\JWTException;
 use think\App;
+use think\facade\Event;
 use think\Response;
 
 /**
@@ -26,73 +27,73 @@ use think\Response;
  */
 class Jwt
 {
-	/**
-	 * app.
-	 *
-	 * @var mixed
-	 */
-	protected $app;
+    /**
+     * app.
+     *
+     * @var mixed
+     */
+    protected $app;
 
-	/**
-	 * __construct.
-	 *
-	 * @param mixed $app
-	 */
-	public function __construct(App $app)
-	{
-		$this->app = $app;
-	}
+    /**
+     * __construct.
+     *
+     * @param mixed $app
+     */
+    public function __construct(App $app)
+    {
+        $this->app = $app;
+    }
 
-	/**
-	 * handle.
-	 *
-	 * @param mixed $request
-	 * @param mixed $next
-	 * @param mixed $store
-	 */
-	public function handle($request, \Closure $next, $store = null)
-	{
-		if ($request->method(true) == 'OPTIONS') {
-			return Response::create()->code(204);
-		}
-		$ignore_verify = $request->rule()->getOption('ignore_verify')??false;
-		// $ignore_verify = true;
-		if ($ignore_verify) {
-			return $next($request);
-		}
-		// return $this->app->get('jwt.token')->automaticRenewalToken();
-		try {
-			if ($this->app->get('jwt')->store($store)->verify() === true) {
-				if ($this->app->get('jwt.user')->getBind()) {
-					if ($user = $this->app->get('jwt.user')->find()) {
-						// 路由注入
-						unset($user->pay_passwd,$user->pay_password,$user->passwd,$user->password);
-						$request->user = $user;
-						// 绑定当前用户模型
-						$class = $this->app->get('jwt.user')->getClass();
-						$this->app->bind($class, $user);
-						// 绑定用户后一些业务处理
-						$this->bindUserAfter($request);
-					} else {
-						throw new JWTException('登录校验已失效, 请重新登录', 401);
-					}
-				}
-				return $next($request);
-			}
-			throw new JWTException('Token 验证不通过', 401);
-		} catch (\Throwable $e) {
-			throw new JWTException('Token 验证不通过', 401);
-		}
-	}
-
-	/**
-	 * bindUserAfter.
-	 *
-	 * @param mixed $request
-	 */
-	protected function bindUserAfter($request): void
-	{
-		// 当前用户
-		// $request->user
-	}
+    /**
+     * handle.
+     *
+     * @param mixed $request
+     * @param mixed $next
+     * @param mixed $store
+     */
+    public function handle($request, \Closure $next, $store = null)
+    {
+        if ($request->method(true) == 'OPTIONS') {
+            return Response::create()->code(204);
+        }
+        $ignore_verify = $request->rule()->getOption('ignore_verify') ?? false;
+        if ($ignore_verify) {
+            return $next($request);
+        }
+        try {
+            if ($this->app->get('jwt')->store($store)->verify() === true) {
+                $this->bind($request, $store);
+                return $next($request);
+            }
+            throw new JWTException('Token 验证不通过', 401);
+        } catch (\Throwable $e) {
+            if (true === $this->app->get('jwt')->store($store)->isRefreshExpired()) {
+                $this->app->get('jwt')->store($store)->refreshToken();
+                $this->bind($request, $store);
+                return  $next($request);
+            } else {
+                throw new JWTException($e->getMessage(), 401);
+            }
+        }
+    }
+    public function bind($request, $store)
+    {
+        if ($this->app->get('jwt.user')->getBind()) {
+            if ($user = $this->app->get('jwt.user')->find()) {
+                // 路由注入
+                unset($user->pay_passwd, $user->payment, $user->pay_password, $user->passwd, $user->password);
+                $request->user = $user;
+                // 绑定当前用户模型
+                $class = $this->app->get('jwt.user')->getClass();
+                $this->app->bind($class, $user);
+                // 绑定用户后一些业务处理
+                Event::trigger("UserAuthAfter", $user);
+            } else {
+                if ($this->app->get('jwt')->store($store)->isRefreshExpired() === true) {
+                    $this->app->get('jwt')->store($store)->refreshToken();
+                } else
+                    throw new JWTException('登录校验已失效, 请重新登录', 401);
+            }
+        }
+    }
 }

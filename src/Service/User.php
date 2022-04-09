@@ -24,80 +24,82 @@ use think\App;
 
 class User
 {
-	protected $config;
+    protected $config;
 
-	protected $app;
+    protected $app;
 
-	public function __construct(App $app)
-	{
-		$this->app = $app;
+    public function __construct(App $app)
+    {
+        $this->app = $app;
 
-		$this->init();
-	}
+        $this->init();
+    }
 
-	/**
-	 * @var Config
-	 */
-	public function getConfig()
-	{
-		return $this->config;
-	}
+    /**
+     * @var Config
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
 
-	public function getClass(): string
-	{
-		$token = $this->app->get('jwt.token')->getToken();
+    public function getClass(): string
+    {
+        $token = $this->app->get('jwt.token')->getToken();
 
-		try {
-			// dd($this->config->getClass());
-			if (empty($this->config->getClass())) {
-				throw new JWTException($this->getStore() . '应用 Token 配置未完整', 500);
-			}
+        try {
+            // dd($this->config->getClass());
+            if (empty($this->config->getClass())) {
+                throw new JWTException($this->getStore() . '应用 Token 配置未完整', 500);
+            }
 
-			return $token->claims()->get('model', $this->config->getClass());
-		} catch (\OutOfBoundsException $e) {
-			$store = $this->getStore();
-			throw new JWTException("{$store}应用未配置用户模型文件");
-		}
-	}
+            return $token->claims()->get('model', $this->config->getClass());
+        } catch (\OutOfBoundsException $e) {
+            $store = $this->getStore();
+            throw new JWTException("{$store}应用未配置用户模型文件");
+        }
+    }
 
-	public function getModel()
-	{
-		return $this->config->getClass();
-	}
+    public function getModel()
+    {
+        return $this->config->getClass();
+    }
 
-	public function getBind()
-	{
-		return $this->config->getBind();
-	}
+    public function getBind()
+    {
+        return $this->config->getBind();
+    }
 
-	public function find()
-	{
-		$class = $this->getClass();
-		$token = $this->app->get('jwt.token')->getToken();
-		$id = $token->claims()->get('jti');
+    public function find()
+    {
+        $class = $this->getClass();
+        $token = $this->app->get('jwt.token')->getToken();
 
-		$model = new $class();
-		if ($model instanceof AuthorizeInterface) {
-			return $model->getUserById($id);
-		}
-		throw new JWTException('implements ' . AuthorizeInterface::class);
-	}
+        $id = $token->claims()->get('jti');
 
-	protected function init()
-	{
-		$options = $this->resolveConfig();
-		$this->config = new Config($options);
-	}
+        $model = new $class();
 
-	protected function getStore()
-	{
-		return $this->app->get('jwt')->getStore();
-	}
+        if ($model instanceof AuthorizeInterface) {
+            return $model->getUserById($id);
+        }
+        throw new JWTException('implements ' . AuthorizeInterface::class);
+    }
 
-	protected function resolveConfig(): array
-	{
-		$store = $this->getStore();
+    protected function init()
+    {
+        $options = $this->resolveConfig();
+        $this->config = new Config($options);
+    }
 
-		return $this->app->config->get("jwt.stores.{$store}.user", []);
-	}
+    protected function getStore()
+    {
+        return $this->app->get('jwt')->getStore();
+    }
+
+    protected function resolveConfig(): array
+    {
+        $store = $this->getStore();
+
+        return $this->app->config->get("jwt.stores.{$store}.user", []);
+    }
 }

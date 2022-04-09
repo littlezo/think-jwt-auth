@@ -24,188 +24,186 @@ use think\App;
 
 class Manager
 {
-	/**
-	 * @var array|object
-	 */
-	protected $cache;
+    /**
+     * @var array|object
+     */
+    protected $cache;
 
-	/**
-	 * @var App
-	 */
-	protected $app;
+    /**
+     * @var App
+     */
+    protected $app;
 
-	/**
-	 * @var Config
-	 */
-	protected $config;
+    /**
+     * @var Config
+     */
+    protected $config;
 
-	public function __construct(App $app)
-	{
-		$this->app = $app;
+    public function __construct(App $app)
+    {
+        $this->app = $app;
 
-		$this->init();
-	}
+        $this->init();
+    }
 
-	/**
-	 * @var Config
-	 */
-	public function getConfig()
-	{
-		return $this->config;
-	}
+    /**
+     * @var Config
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
 
-	public function login(Token $token): void
-	{
-		if ($this->app->get('jwt.sso')->getEnable()) {
-			$this->handleSSO($token);
-		}
-		$this->pushWhitelist($token);
-	}
+    public function login(Token $token): void
+    {
+        if ($this->app->get('jwt.sso')->getEnable()) {
+            $this->handleSSO($token);
+        }
+        $this->pushWhitelist($token);
+    }
 
-	public function logout(Token $token): void
-	{
-		$this->pushBlacklist($token);
-	}
+    public function logout(Token $token): void
+    {
+        $this->pushBlacklist($token);
+    }
 
-	public function wasBan(Token $token): bool
-	{
-		return $this->getBlacklist($token) === $token->toString();
-	}
+    public function wasBan(Token $token): bool
+    {
+        return $this->getBlacklist($token) === $token->toString();
+    }
 
-	public function destroyStoreWhitelist($store): void
-	{
-		$this->clearStoreWhitelist($store);
-	}
+    public function destroyStoreWhitelist($store): void
+    {
+        $this->clearStoreWhitelist($store);
+    }
 
-	public function destroyStoreBlacklist($store): void
-	{
-		$this->clearStoreBlacklist($store);
-	}
+    public function destroyStoreBlacklist($store): void
+    {
+        $this->clearStoreBlacklist($store);
+    }
 
-	public function destroyToken($id, $store): void
-	{
-		$type = $this->config->getWhitelist();
-		$tag = $store . '-' . $type;
-		$keys = $this->app->cache->getTagItems($tag);
-		foreach ($keys as $key) {
-			$handle = strtolower($this->app->config->get('cache.default'));
-			if ($handle == 'file') {
-				$token = unserialize($this->decodeFileCache($key)['content']);
-			} elseif ($handle == 'redis') {
-				$token = $this->app->cache->get($key);
-			}
+    public function destroyToken($id, $store): void
+    {
+        $type = $this->config->getWhitelist();
+        $tag = $store . '-' . $type;
+        $keys = $this->app->cache->getTagItems($tag);
+        foreach ($keys as $key) {
+            $handle = strtolower($this->app->config->get('cache.default'));
+            if ($handle == 'file') {
+                $token = unserialize($this->decodeFileCache($key)['content']);
+            } elseif ($handle == 'redis') {
+                $token = $this->app->cache->get($key);
+            }
+            if (!$token) {
+                continue;
+            }
+            $token = $this->app->get('jwt.token')->parse($token);
+            if ($token->claims()->has('jti') && $token->claims()->get('jti') == $id) {
+                $this->pushBlacklist($token);
+            }
+        }
+    }
 
-			// dd($token);
-			if (! $token) {
-				continue;
-			}
-			$token = $this->app->get('jwt.token')->parse($token);
-			if ($token->claims()->has('jti') && $token->claims()->get('jti') == $id) {
-				$this->pushBlacklist($token);
-			}
-		}
-	}
+    protected function init()
+    {
+        $this->resloveConfig();
+    }
 
-	protected function init()
-	{
-		$this->resloveConfig();
-	}
+    protected function resloveConfig()
+    {
+        $options = $this->app->config->get('jwt.manager', []);
 
-	protected function resloveConfig()
-	{
-		$options = $this->app->config->get('jwt.manager', []);
+        $this->config = new Config($options);
+    }
 
-		$this->config = new Config($options);
-	}
+    protected function handleSSO(Plain $token): void
+    {
+        $jti = $token->claims()->get('jti');
+        $store = $token->claims()->get('store');
+        // dd($store);
+        $this->destroyToken($jti, $store);
+    }
 
-	protected function handleSSO(Plain $token): void
-	{
-		$jti = $token->claims()->get('jti');
-		$store = $token->claims()->get('store');
-		// dd($store);
-		$this->destroyToken($jti, $store);
-	}
+    protected function pushWhitelist(Plain $token): void
+    {
+        $jti = $token->claims()->get('jti');
+        $store = $token->claims()->get('store');
 
-	protected function pushWhitelist(Plain $token): void
-	{
-		$jti = $token->claims()->get('jti');
-		$store = $token->claims()->get('store');
+        $now = time();
+        $exp = $token->claims()->get('exp');
 
-		$now = time();
-		$exp = $token->claims()->get('exp');
+        $ttl = $exp->getTimestamp() - $now;
+        $tag = $store . '-' . $this->config->getWhitelist();
 
-		$ttl = $exp->getTimestamp() - $now;
-		$tag = $store . '-' . $this->config->getWhitelist();
+        $key = $this->makeKey($store, $this->config->getWhitelist(), $jti, $token);
+        $this->setCache($tag, $key, $token, $ttl);
+    }
 
-		$key = $this->makeKey($store, $this->config->getWhitelist(), $jti, $token);
-		$this->setCache($tag, $key, $token, $ttl);
-	}
+    protected function pushBlacklist(Plain $token): void
+    {
+        $jti = $token->claims()->get('jti');
+        $store = $token->claims()->get('store');
 
-	protected function pushBlacklist(Plain $token): void
-	{
-		$jti = $token->claims()->get('jti');
-		$store = $token->claims()->get('store');
+        $now = time();
+        $exp = $token->claims()->get('exp');
+        $ttl = $this->app->get('jwt.token')->getConfig()->getRefreshTTL();
+        $exp = $exp->modify("+{$ttl} sec");
+        $ttl = $exp->getTimestamp() - $now;
+        $tag = $store . '-' . $this->config->getBlacklist();
+        $key = $this->makeKey($store, $this->config->getBlacklist(), $jti, $token);
 
-		$now = time();
-		$exp = $token->claims()->get('exp');
-		$ttl = $this->app->get('jwt.token')->getConfig()->getRefreshTTL();
-		$exp = $exp->modify("+{$ttl} sec");
-		$ttl = $exp->getTimestamp() - $now;
-		$tag = $store . '-' . $this->config->getBlacklist();
-		$key = $this->makeKey($store, $this->config->getBlacklist(), $jti, $token);
+        $this->setCache($tag, $key, $token, $ttl);
+    }
 
-		$this->setCache($tag, $key, $token, $ttl);
-	}
+    protected function getBlacklist(Plain $token)
+    {
+        $jti = $token->claims()->get('jti');
+        $store = $token->claims()->get('store');
 
-	protected function getBlacklist(Plain $token)
-	{
-		$jti = $token->claims()->get('jti');
-		$store = $token->claims()->get('store');
+        return $this->getCache($store, $this->config->getBlacklist(), $jti, $token);
+    }
 
-		return $this->getCache($store, $this->config->getBlacklist(), $jti, $token);
-	}
+    protected function decodeFileCache($filename)
+    {
+        $content = @file_get_contents($filename);
+        if ($content !== false) {
+            $expire = (int) substr($content, 8, 12);
 
-	protected function decodeFileCache($filename)
-	{
-		$content = @file_get_contents($filename);
-		if ($content !== false) {
-			$expire = (int) substr($content, 8, 12);
+            $content = substr($content, 32);
 
-			$content = substr($content, 32);
+            return is_string($content) ? ['content' => $content, 'expire' => $expire] : null;
+        }
+    }
 
-			return is_string($content) ? ['content' => $content, 'expire' => $expire] : null;
-		}
-	}
+    protected function clearStoreWhitelist($store): void
+    {
+        $this->clearTag($store . '-' . $this->config->getWhitelist());
+    }
 
-	protected function clearStoreWhitelist($store): void
-	{
-		$this->clearTag($store . '-' . $this->config->getWhitelist());
-	}
+    protected function clearStoreBlacklist($store): void
+    {
+        $this->clearTag($store . '-' . $this->config->getBlacklist());
+    }
 
-	protected function clearStoreBlacklist($store): void
-	{
-		$this->clearTag($store . '-' . $this->config->getBlacklist());
-	}
+    private function makeKey($store, $type, $uid, Token $token): string
+    {
+        return implode(':', [$this->config->getPrefix(), $store, $type, $uid, md5($token->toString())]);
+    }
 
-	private function makeKey($store, $type, $uid, Token $token): string
-	{
-		return implode(':', [$this->config->getPrefix(), $store, $type, $uid, md5($token->toString())]);
-	}
+    private function clearTag($tag): void
+    {
+        $this->app->cache->tag($tag)->clear();
+    }
 
-	private function clearTag($tag): void
-	{
-		$this->app->cache->tag($tag)->clear();
-	}
+    private function setCache($tag, $key, Token $token, $exp): void
+    {
+        $this->app->cache->tag($tag)->set($key, $token->toString(), $exp);
+    }
 
-	private function setCache($tag, $key, Token $token, $exp): void
-	{
-		$this->app->cache->tag($tag)->set($key, $token->toString(), $exp);
-	}
+    private function getCache($store, $type, $jti, $token)
+    {
+        $key = $this->makeKey($store, $type, $jti, $token);
 
-	private function getCache($store, $type, $jti, $token)
-	{
-		$key = $this->makeKey($store, $type, $jti, $token);
-
-		return $this->app->cache->get($key);
-	}
+        return $this->app->cache->get($key);
+    }
 }

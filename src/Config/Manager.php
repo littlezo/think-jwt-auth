@@ -19,51 +19,51 @@ namespace littler\jwt\Config;
 
 class Manager
 {
-	/**
-	 * @var string
-	 */
-	protected $prefix = 'jwt';
+    /**
+     * @var string
+     */
+    protected $prefix = 'jwt';
 
-	/**
-	 * @var string
-	 */
-	protected $blacklist = 'blacklist';
+    /**
+     * @var string
+     */
+    protected $blacklist = 'blacklist';
 
-	/**
-	 * @var string
-	 */
-	protected $whitelist = 'whitelist';
+    /**
+     * @var string
+     */
+    protected $whitelist = 'whitelist';
 
-	public function __construct(array $options = [])
-	{
-		if (! empty($options)) {
-			foreach ($options as $key => $value) {
-				$this->{$key} = $value;
-			}
-		}
-	}
+    public function __construct(array $options = [])
+    {
+        if (!empty($options)) {
+            foreach ($options as $key => $value) {
+                $this->{$key} = $value;
+            }
+        }
+    }
 
-	/**
-	 * getPrefix.
-	 */
-	public function getPrefix(): string
-	{
-		return $this->prefix;
-	}
+    /**
+     * getPrefix.
+     */
+    public function getPrefix(): string
+    {
+        return $this->prefix;
+    }
 
-	/**
-	 * getBlacklist.
-	 */
-	public function getBlacklist(): string
-	{
-		return $this->blacklist;
-	}
+    /**
+     * getBlacklist.
+     */
+    public function getBlacklist(): string
+    {
+        return $this->blacklist;
+    }
 
-	/**
-	 * getWhitelist.
-	 */
-	public function getWhitelist(): string
-	{
-		return $this->whitelist;
-	}
+    /**
+     * getWhitelist.
+     */
+    public function getWhitelist(): string
+    {
+        return $this->whitelist;
+    }
 }

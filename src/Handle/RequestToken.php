@@ -22,45 +22,45 @@ use think\App;
 
 class RequestToken
 {
-	protected $handles = ['Header', 'Param', 'Cookie'];
+    protected $handles = ['Header', 'Param', 'Cookie'];
 
-	protected $token;
+    protected $token;
 
-	protected $app;
+    protected $app;
 
-	public function __construct(App $app)
-	{
-		$this->app = $app;
-	}
+    public function __construct(App $app)
+    {
+        $this->app = $app;
+    }
 
-	/**
-	 * 获取请求Token.
-	 *
-	 * @param array|string $handle
-	 */
-	public function get($handle): string
-	{
-		if (is_string($handle)) {
-			$handles = explode('|', $handle);
-		}
+    /**
+     * 获取请求Token.
+     *
+     * @param array|string $handle
+     */
+    public function get($handle): string
+    {
+        if (is_string($handle)) {
+            $handles = explode('|', $handle);
+        }
 
-		foreach ($handles as $handle) {
-			if (in_array($handle, $this->handles, true)) {
-				$namespace = '\\littler\\JWTAuth\Handle\\' . $handle;
-				$token = (new $namespace($this->app))->handle();
-				if ($token) {
-					$this->token = $token;
-					break;
-				}
-				continue;
-			}
-			throw new JwtException('不支持此方式获取.', 406);
-		}
+        foreach ($handles as $handle) {
+            if (in_array($handle, $this->handles, true)) {
+                $namespace = '\\littler\\JWTAuth\Handle\\' . $handle;
+                $token = (new $namespace($this->app))->handle();
+                if ($token) {
+                    $this->token = $token;
+                    break;
+                }
+                continue;
+            }
+            throw new JwtException('不支持此方式获取.', 406);
+        }
 
-		if (! $this->token) {
-			throw new JwtException('获取Token失败.', 412);
-		}
+        if (!$this->token) {
+            throw new JwtException('获取Token失败.', 412);
+        }
 
-		return $this->token;
-	}
+        return $this->token;
+    }
 }
