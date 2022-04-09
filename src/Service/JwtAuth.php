@@ -17,281 +17,288 @@ declare(strict_types=1);
 
 namespace littler\jwt\Service;
 
-use think\App;
-use littler\BaseModel;
 use Lcobucci\JWT\Token;
-use littler\user\AuthorizeInterface;
+use littler\BaseModel;
 use littler\jwt\Exception\JWTException;
-use littler\jwt\Exception\NotUserException;
 use littler\jwt\Exception\LoginFailedException;
+use littler\jwt\Exception\NotUserException;
 use littler\jwt\Exception\TokenAlreadyEexpired;
+use littler\user\AuthorizeInterface;
+use think\App;
 
 class JwtAuth
 {
-    /**
-     * 应用名称.
-     *
-     * @var App
-     */
-    protected $app;
+	/**
+	 * 应用名称.
+	 *
+	 * @var App
+	 */
+	protected $app;
 
-    /**
-     * 应用名称.
-     *
-     * @var string
-     */
-    protected $store;
+	/**
+	 * 应用名称.
+	 *
+	 * @var string
+	 */
+	protected $store;
 
-    /**
-     * @var array|object|string
-     */
-    protected $user;
+	/**
+	 * @var array|object|string
+	 */
+	protected $user;
 
-    /**
-     * model.
-     *
-     * @var BaseModel
-     */
-    protected $model;
+	/**
+	 * model.
+	 *
+	 * @var BaseModel
+	 */
+	protected $model;
 
-    /**
-     * @var string
-     */
-    protected $username = 'username';
+	/**
+	 * @var string
+	 */
+	protected $username = 'username';
 
-    /**
-     * @var string
-     */
-    protected $password = 'password';
+	/**
+	 * @var string
+	 */
+	protected $password = 'password';
 
-    /**
-     * @var bool
-     */
-    protected $verifyPassword = true;
+	/**
+	 * @var bool
+	 */
+	protected $verifyPassword = true;
 
-    public function __construct(App $app)
-    {
-        $this->app = $app;
+	public function __construct(App $app)
+	{
+		$this->app = $app;
 
-        $this->init();
-    }
+		$this->init();
+	}
 
-    public function username(string $username = null): self
-    {
-        if ($username) {
-            $this->username = $username;
-        }
+	public function username(string $username = null): self
+	{
+		if ($username) {
+			$this->username = $username;
+		}
 
-        return $this;
-    }
+		return $this;
+	}
 
-    public function password(string $password = null): self
-    {
-        if ($password) {
-            $this->password = $password;
-        }
+	public function password(string $password = null): self
+	{
+		if ($password) {
+			$this->password = $password;
+		}
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * 忽略密码认证
-     *
-     * @return $this
-     */
-    public function ignorePasswordVerify(): self
-    {
-        $this->verifyPassword = false;
-        return $this;
-    }
+	/**
+	 * 忽略密码认证
+	 *
+	 * @return $this
+	 */
+	public function ignorePasswordVerify(): self
+	{
+		$this->verifyPassword = false;
 
-    public function store(string $store = 'default'): self
-    {
-        if ($store) {
-            $this->store = $store;
-        }
+		return $this;
+	}
 
-        return $this;
-    }
+	public function store(string $store = 'default'): self
+	{
+		if ($store) {
+			$this->store = $store;
+		}
 
-    public function getStore()
-    {
-        return $this->store ?? $this->getDefaultApp();
-    }
+		return $this;
+	}
 
-    /**
-     * 生成 Token.
-     *
-     * @param mixed $identifier
-     */
-    public function token($identifier, array $claims = []): Token
-    {
-        $token = $this->app->get('jwt.token')->make($identifier, $claims);
-        $this->app->get('jwt.manager')->login($token);
-        return $token;
-    }
+	public function getStore()
+	{
+		return $this->store ?? $this->getDefaultApp();
+	}
 
-    /**
-     * 验证 Token.
-     *
-     * @param string $token
-     */
-    public function verify(string $token = null): bool
-    {
-        $service = $this->app->get('jwt.token');
-        if (!$token) {
-            $token = $service->getRequestToken();
-        }
+	/**
+	 * 生成 Token.
+	 *
+	 * @param mixed $identifier
+	 */
+	public function token($identifier, array $claims = []): Token
+	{
+		$token = $this->app->get('jwt.token')->make($identifier, $claims);
+		$this->app->get('jwt.manager')->login($token);
 
-        // 是否存在黑名单
-        $this->wasBan($token);
+		return $token;
+	}
 
-        // 检测合法性
-        if ($service->validate($token)) {
-            return $service->validateExp($token);
-        }
+	/**
+	 * 验证 Token.
+	 *
+	 * @param string $token
+	 */
+	public function verify(string $token = null): bool
+	{
+		$service = $this->app->get('jwt.token');
+		if (!$token) {
+			$token = $service->getRequestToken();
+		}
 
-        return false;
-    }
-    /**
-     * 验证 Token.
-     *
-     * @param string $token
-     */
-    public function isRefreshExpired(string $token = null): bool
-    {
-        $service = $this->app->get('jwt.token');
-        if (!$token) {
-            $token = $service->getRequestToken();
-        }
+		// 是否存在黑名单
+		$this->wasBan($token);
 
-        // 是否存在黑名单
-        $this->wasBan($token);
+		// 检测合法性
+		if ($service->validate($token)) {
+			return $service->validateExp($token);
+		}
 
-        // 检测合法性
-        if ($service->validate($token)) {
-            return $service->isRefreshExpired($token);
-        }
+		return false;
+	}
 
-        return false;
-    }
-    /**
-     * 刷新 Token.
-     *
-     * @param string $token
-     */
-    public function refreshToken(string $token = null): string
-    {
-        $service = $this->app->get('jwt.token');
-        if (!$token) {
-            $token = $service->getRequestToken();
-        }
+	/**
+	 * 验证 Token.
+	 *
+	 * @param string $token
+	 */
+	public function isRefreshExpired(string $token = null): bool
+	{
+		$service = $this->app->get('jwt.token');
+		if (!$token) {
+			$token = $service->getRequestToken();
+		}
 
-        // 是否存在黑名单
-        $this->wasBan($token);
+		// 是否存在黑名单
+		$this->wasBan($token);
 
-        // 检测合法性
-        if ($service->validate($token)) {
-            return $service->automaticRenewalToken($token)->toString();
-        }
+		// 检测合法性
+		if ($service->validate($token)) {
+			return $service->isRefreshExpired($token);
+		}
 
-        return false;
-    }
-    public function login(array $args): string
-    {
-        $this->user($args);
-        $user = $this->user;
+		return false;
+	}
 
-        if (!$user) {
-            throw new NotUserException('登录失败，请检查用户名或密码', 900900);
-        }
-        if ($user->status == $user::$disable) {
-            throw new LoginFailedException('该用户已被禁用|' . $user->username ?? null, 900901);
-        }
-        if ($this->verifyPassword && !password_verify($args['password'] ?? '', $this->user->getOrigin()['password'] ?? '')) {
-            throw new LoginFailedException("登录失败,密码错误", 900902);
-        }
-        return $this->token($user->{$user->getAutoPk()}, ["id" => $user->{$user->getAutoPk()}])->toString();
-    }
+	/**
+	 * 刷新 Token.
+	 *
+	 * @param string $token
+	 */
+	public function refreshToken(string $token = null): string
+	{
+		$service = $this->app->get('jwt.token');
+		if (!$token) {
+			$token = $service->getRequestToken();
+		}
 
-    public function user($args)
-    {
-        $this->getModel();
-        $condition = $this->filter($args);
-        if (!$condition || $this->verifyPassword && !isset($args['password'])) {
-            throw new LoginFailedException('登录失败，参数错误', 900900);
-        }
-        if ($this->model->hasUser($condition)) {
-            $this->user = $this->model->getUser($condition);
-        }
+		// 是否存在黑名单
+		$this->wasBan($token);
 
-        return $this;
-    }
+		// 检测合法性
+		if ($service->validate($token)) {
+			return $service->automaticRenewalToken($token)->toString();
+		}
 
-    public function logout(string $token = null)
-    {
-        $service = $this->app->get('jwt.token');
-        if (!$token) {
-            $token = $service->getRequestToken();
-        }
+		return false;
+	}
 
-        $token = $service->parse($token);
-        $this->app->get('jwt.manager')->logout($token);
-    }
+	public function login(array $args): string
+	{
+		$this->user($args);
+		$user = $this->user;
 
-    // Todo 等待优化
+		if (!$user) {
+			throw new NotUserException('登录失败，请检查用户名或密码', 900900);
+		}
+		if ($user->status == $user::$disable) {
+			throw new LoginFailedException('该用户已被禁用|'.$user->username ?? null, 900901);
+		}
+		if ($this->verifyPassword && !password_verify($args['password'] ?? '', $this->user->getOrigin()['password'] ?? '')) {
+			throw new LoginFailedException('登录失败,密码错误', 900902);
+		}
 
-    /**
-     * @param $condition
-     */
-    protected function filter($condition): array
-    {
-        $this->getModel();
-        $where = [];
-        $fields = array_keys($this->model->getFields());
-        foreach ($condition as $field => $value) {
-            if (in_array($field, $fields, true) && $field === $this->username) {
-                $where[$field] = $value;
-            }
-        }
-        // dd($where);
-        return $where;
-    }
+		return $this->token($user->{$user->getAutoPk()}, ['id' => $user->{$user->getAutoPk()}])->toString();
+	}
 
-    protected function init()
-    {
-    }
+	public function user($args)
+	{
+		$this->getModel();
+		$condition = $this->filter($args);
+		if (!$condition || $this->verifyPassword && !isset($args['password'])) {
+			throw new LoginFailedException('登录失败，参数错误', 900900);
+		}
+		if ($this->model->hasUser($condition)) {
+			$this->user = $this->model->getUser($condition);
+		}
 
-    protected function getModel()
-    {
-        try {
-            $class = $this->app->get("jwt.user")->getModel();
-            $model = new $class();
-            if ($model instanceof AuthorizeInterface) {
-                $this->model = $model;
-                return $this;
-            }
-            throw new JWTException('implements ' . AuthorizeInterface::class);
-        } catch (JWTException $e) {
-            throw new JWTException($e->getMessage());
-        } catch (\Exception $e) {
-            $store = $this->getStore();
-            throw new JWTException("{$store}应用未配置用户模型文件");
-        }
-    }
+		return $this;
+	}
 
-    protected function getDefaultApp(): string
-    {
-        return $this->app->http->getName() ?: 'default';
-    }
+	public function logout(string $token = null)
+	{
+		$service = $this->app->get('jwt.token');
+		if (!$token) {
+			$token = $service->getRequestToken();
+		}
 
-    protected function wasBan($token)
-    {
-        $token = $this->app->get('jwt.token')->parse($token);
-        if (true === $this->app->get('jwt.manager')->wasBan($token)) {
-            $config = $this->app->get('jwt.token')->getConfig();
+		$token = $service->parse($token);
+		$this->app->get('jwt.manager')->logout($token);
+	}
 
-            throw new TokenAlreadyEexpired('token was ban', $config->getExpiresCode());
-        }
-    }
+	// Todo 等待优化
+
+	/**
+	 * @param $condition
+	 */
+	protected function filter($condition): array
+	{
+		$this->getModel();
+		$where = [];
+		$fields = array_keys($this->model->getFields());
+		foreach ($condition as $field => $value) {
+			if (in_array($field, $fields, true) && $field === $this->username) {
+				$where[$field] = $value;
+			}
+		}
+		// dd($where);
+		return $where;
+	}
+
+	protected function init()
+	{
+	}
+
+	protected function getModel()
+	{
+		try {
+			$class = $this->app->get('jwt.user')->getModel();
+			$model = new $class();
+			if ($model instanceof AuthorizeInterface) {
+				$this->model = $model;
+
+				return $this;
+			}
+			throw new JWTException('implements '.AuthorizeInterface::class);
+		} catch (JWTException $e) {
+			throw new JWTException($e->getMessage());
+		} catch (\Exception $e) {
+			$store = $this->getStore();
+			throw new JWTException("{$store}应用未配置用户模型文件");
+		}
+	}
+
+	protected function getDefaultApp(): string
+	{
+		return $this->app->http->getName() ?: 'default';
+	}
+
+	protected function wasBan($token)
+	{
+		$token = $this->app->get('jwt.token')->parse($token);
+		if (true === $this->app->get('jwt.manager')->wasBan($token)) {
+			$config = $this->app->get('jwt.token')->getConfig();
+
+			throw new TokenAlreadyEexpired('token was ban', $config->getExpiresCode());
+		}
+	}
 }

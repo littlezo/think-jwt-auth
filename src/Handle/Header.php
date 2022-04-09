@@ -19,18 +19,18 @@ namespace littler\jwt\Handle;
 
 class Header extends RequestToken
 {
-    public function handle(): string
-    {
-        $authorization = $this->app->request->header('Authorization');
+	public function handle(): string
+	{
+		$authorization = $this->app->request->header('Authorization');
 
-        if (!$authorization) {
-            return '';
-        }
+		if (!$authorization) {
+			return '';
+		}
 
-        if (strpos($authorization, 'Bearer ') === 0) {
-            return substr($authorization, 7);
-        }
+		if (0 === strpos($authorization, 'Bearer ')) {
+			return substr($authorization, 7);
+		}
 
-        return $authorization;
-    }
+		return $authorization;
+	}
 }

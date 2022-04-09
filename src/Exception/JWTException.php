@@ -25,19 +25,19 @@ use think\exception\HttpException;
  */
 class JWTException extends HttpException
 {
-    // public function __construct(string $message, $code = 0)
-    // {
-    // 	parent::__construct(401, $message, null, [], $code);
-    // }
-    protected const HTTP_SUCCESS = 401;
+	// public function __construct(string $message, $code = 0)
+	// {
+	// 	parent::__construct(401, $message, null, [], $code);
+	// }
+	protected const HTTP_SUCCESS = 401;
 
-    public function __construct(string $message = '', int $code = 0, $statusCode = 0, array $headers = [], Exception $previous = null)
-    {
-        parent::__construct($statusCode, $message ?: $this->getMessage(), $previous, $headers, $code);
-    }
+	public function __construct(string $message = '', int $code = 0, $statusCode = 0, array $headers = [], Exception $previous = null)
+	{
+		parent::__construct($statusCode, $message ?: $this->getMessage(), $previous, $headers, $code);
+	}
 
-    public function getStatusCode()
-    {
-        return self::HTTP_SUCCESS;
-    }
+	public function getStatusCode()
+	{
+		return self::HTTP_SUCCESS;
+	}
 }

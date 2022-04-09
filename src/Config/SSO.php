@@ -19,25 +19,25 @@ namespace littler\jwt\Config;
 
 class SSO
 {
-    /**
-     * @var bool
-     */
-    protected $enable = false;
+	/**
+	 * @var bool
+	 */
+	protected $enable = false;
 
-    public function __construct(array $options)
-    {
-        if (!empty($options)) {
-            foreach ($options as $key => $value) {
-                $this->{$key} = $value;
-            }
-        }
-    }
+	public function __construct(array $options)
+	{
+		if (!empty($options)) {
+			foreach ($options as $key => $value) {
+				$this->{$key} = $value;
+			}
+		}
+	}
 
-    /**
-     * getEnable.
-     */
-    public function getEnable(): bool
-    {
-        return $this->enable;
-    }
+	/**
+	 * getEnable.
+	 */
+	public function getEnable(): bool
+	{
+		return $this->enable;
+	}
 }

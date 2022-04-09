@@ -17,18 +17,18 @@ declare(strict_types=1);
 
 use think\facade\Config;
 
-if (! function_exists('jwt')) {
+if (!function_exists('jwt')) {
 	function jwt($uid, $options = [])
 	{
 		return app('jwt')->token($uid, $options)->toString();
 	}
 }
-if (! function_exists('config')) {
+if (!function_exists('config')) {
 	/**
 	 * 获取和设置配置参数.
 	 *
-	 * @param array|string $name 参数名
-	 * @param mixed $value 参数值
+	 * @param array|string $name  参数名
+	 * @param mixed        $value 参数值
 	 *
 	 * @return mixed
 	 */
@@ -38,6 +38,6 @@ if (! function_exists('config')) {
 			return Config::set($name, $value);
 		}
 
-		return strpos($name, '?') === 0 ? Config::has(substr($name, 1)) : Config::get($name, $value);
+		return 0 === strpos($name, '?') ? Config::has(substr($name, 1)) : Config::get($name, $value);
 	}
 }

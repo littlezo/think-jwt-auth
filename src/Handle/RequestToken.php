@@ -46,7 +46,7 @@ class RequestToken
 
         foreach ($handles as $handle) {
             if (in_array($handle, $this->handles, true)) {
-                $namespace = '\\littler\\JWTAuth\Handle\\' . $handle;
+                $namespace = '\\littler\\jwt\Handle\\' . $handle;
                 $token = (new $namespace($this->app))->handle();
                 if ($token) {
                     $this->token = $token;

@@ -19,41 +19,41 @@ namespace littler\jwt\Config;
 
 class User
 {
-    /**
-     * bind.
-     *
-     * @var bool
-     */
-    protected $bind = false;
+	/**
+	 * bind.
+	 *
+	 * @var bool
+	 */
+	protected $bind = false;
 
-    /**
-     * class.
-     *
-     * @var mixed
-     */
-    protected $class;
+	/**
+	 * class.
+	 *
+	 * @var mixed
+	 */
+	protected $class;
 
-    /**
-     * __construct.
-     *
-     * @param mixed $options
-     */
-    public function __construct(array $options)
-    {
-        if (!empty($options)) {
-            foreach ($options as $key => $value) {
-                $this->{$key} = $value;
-            }
-        }
-    }
+	/**
+	 * __construct.
+	 *
+	 * @param mixed $options
+	 */
+	public function __construct(array $options)
+	{
+		if (!empty($options)) {
+			foreach ($options as $key => $value) {
+				$this->{$key} = $value;
+			}
+		}
+	}
 
-    public function getBind(): bool
-    {
-        return $this->bind;
-    }
+	public function getBind(): bool
+	{
+		return $this->bind;
+	}
 
-    public function getClass(): mixed
-    {
-        return $this->class;
-    }
+	public function getClass(): mixed
+	{
+		return $this->class;
+	}
 }

@@ -19,8 +19,8 @@ namespace littler\jwt\Handle;
 
 class Param extends RequestToken
 {
-    public function handle(): string
-    {
-        return $this->app->request->param('token');
-    }
+	public function handle(): string
+	{
+		return $this->app->request->param('token');
+	}
 }

@@ -17,242 +17,243 @@ declare(strict_types=1);
 
 namespace littler\jwt\Service;
 
-use think\App;
-use DateTimeZone;
 use DateTimeImmutable;
+use DateTimeZone;
 use Lcobucci\Clock\SystemClock;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Token as JwtToken;
-use littler\jwt\Handle\RequestToken;
+use Lcobucci\JWT\Validation\Constraint\LooseValidAt;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use littler\jwt\Config\Token as Config;
 use littler\jwt\Exception\JWTException;
-use Lcobucci\JWT\Validation\Constraint\SignedWith;
-use Lcobucci\JWT\Validation\Constraint\LooseValidAt;
+use littler\jwt\Handle\RequestToken;
+use think\App;
 
 class Token
 {
-    /**
-     * @var App
-     */
-    protected $app;
+	/**
+	 * @var App
+	 */
+	protected $app;
 
-    /**
-     * @var Config
-     */
-    protected $config;
+	/**
+	 * @var Config
+	 */
+	protected $config;
 
-    /**
-     * @var array
-     */
-    protected $claims;
+	/**
+	 * @var array
+	 */
+	protected $claims;
 
-    /**
-     * @var JwtToken
-     */
-    protected $token;
+	/**
+	 * @var JwtToken
+	 */
+	protected $token;
 
-    /**
-     * @var Configuration
-     */
-    private $jwtConfiguration;
+	/**
+	 * @var Configuration
+	 */
+	private $jwtConfiguration;
 
-    public function __construct(App $app)
-    {
-        $this->app = $app;
-        $this->init();
-    }
+	public function __construct(App $app)
+	{
+		$this->app = $app;
+		$this->init();
+	}
 
-    public function initJwtConfiguration()
-    {
-        $this->jwtConfiguration = Configuration::forSymmetricSigner(
-            $this->config->getSigner(),
-            $this->config->getSignerKey()
-        );
-    }
+	public function initJwtConfiguration()
+	{
+		$this->jwtConfiguration = Configuration::forSymmetricSigner(
+			$this->config->getSigner(),
+			$this->config->getSignerKey()
+		);
+	}
 
-    public function getToken()
-    {
-        return $this->token;
-    }
+	public function getToken()
+	{
+		return $this->token;
+	}
 
-    public function make($identifier, array $claims = []): JwtToken
-    {
-        $now = new DateTimeImmutable();
-        $builder = $this->jwtConfiguration->builder()
-            ->permittedFor($this->config->getAud())
-            ->issuedBy($this->config->getIss())
-            ->identifiedBy((string) $identifier)
-            ->issuedAt($now)
-            ->canOnlyBeUsedAfter($now)
-            ->expiresAt($this->getExpiryDateTime($now))
-            ->relatedTo((string) $identifier)
-            ->withClaim('store', $this->getStore());
+	public function make($identifier, array $claims = []): JwtToken
+	{
+		$now = new DateTimeImmutable();
+		$builder = $this->jwtConfiguration->builder()
+			->permittedFor($this->config->getAud())
+			->issuedBy($this->config->getIss())
+			->identifiedBy((string) $identifier)
+			->issuedAt($now)
+			->canOnlyBeUsedAfter($now)
+			->expiresAt($this->getExpiryDateTime($now))
+			->relatedTo((string) $identifier)
+			->withClaim('store', $this->getStore());
 
-        foreach ($claims as $key => $value) {
-            $builder->withClaim($key, $value);
-        }
-        return $builder->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
-    }
+		foreach ($claims as $key => $value) {
+			$builder->withClaim($key, $value);
+		}
 
-    public function getExpiryDateTime($now): DateTimeImmutable
-    {
-        $ttl = (string) $this->config->getExpires();
+		return $builder->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
+	}
 
-        return $now->modify("{$ttl} sec");
-    }
+	public function getExpiryDateTime($now): DateTimeImmutable
+	{
+		$ttl = (string) $this->config->getExpires();
 
-    public function parse(string $token): JwtToken
-    {
-        $this->token = $this->jwtConfiguration->parser()->parse($token);
+		return $now->modify("{$ttl} sec");
+	}
 
-        return $this->token;
-    }
+	public function parse(string $token): JwtToken
+	{
+		$this->token = $this->jwtConfiguration->parser()->parse($token);
 
-    /**
-     * 效验合法性 Token.
-     *
-     * @return bool
-     */
-    public function validate(string $token)
-    {
-        $token = $this->parse($token);
+		return $this->token;
+	}
 
-        $jwtConfiguration = $this->getValidateConfig();
+	/**
+	 * 效验合法性 Token.
+	 *
+	 * @return bool
+	 */
+	public function validate(string $token)
+	{
+		$token = $this->parse($token);
 
-        $jwtConfiguration->setValidationConstraints(
-            new SignedWith($jwtConfiguration->signer(), $jwtConfiguration->signingKey())
-        );
+		$jwtConfiguration = $this->getValidateConfig();
 
-        $constraints = $jwtConfiguration->validationConstraints();
+		$jwtConfiguration->setValidationConstraints(
+			new SignedWith($jwtConfiguration->signer(), $jwtConfiguration->signingKey())
+		);
 
-        return $jwtConfiguration->validator()->validate($token, ...$constraints);
-    }
+		$constraints = $jwtConfiguration->validationConstraints();
 
-    /**
-     * 效验是否过期 Token.
-     *
-     * @return bool
-     */
-    public function validateExp(string $token)
-    {
-        $token = $this->parse($token);
+		return $jwtConfiguration->validator()->validate($token, ...$constraints);
+	}
 
-        $jwtConfiguration = $this->getValidateConfig();
+	/**
+	 * 效验是否过期 Token.
+	 *
+	 * @return bool
+	 */
+	public function validateExp(string $token)
+	{
+		$token = $this->parse($token);
 
-        $jwtConfiguration->setValidationConstraints(
-            new LooseValidAt(new SystemClock(new DateTimeZone(\date_default_timezone_get()))),
-        );
+		$jwtConfiguration = $this->getValidateConfig();
 
-        $constraints = $jwtConfiguration->validationConstraints();
+		$jwtConfiguration->setValidationConstraints(
+			new LooseValidAt(new SystemClock(new DateTimeZone(\date_default_timezone_get()))),
+		);
 
-        return $jwtConfiguration->validator()->validate($token, ...$constraints);
-    }
+		$constraints = $jwtConfiguration->validationConstraints();
 
-    public function login(JwtToken $token)
-    {
-        $this->app->get('jwt.manager')->login($token);
-    }
+		return $jwtConfiguration->validator()->validate($token, ...$constraints);
+	}
 
-    public function logout(?string $token): void
-    {
-        $token = $token ?: $this->getRequestToken();
-        $token = $this->parse($token);
+	public function login(JwtToken $token)
+	{
+		$this->app->get('jwt.manager')->login($token);
+	}
 
-        $this->app->get('jwt.manager')->logout($token);
-    }
+	public function logout(?string $token): void
+	{
+		$token = $token ?: $this->getRequestToken();
+		$token = $this->parse($token);
 
-    /**
-     * 自动获取请求下的Token.
-     */
-    public function getRequestToken(): string
-    {
-        $requestToken = new RequestToken($this->app);
+		$this->app->get('jwt.manager')->logout($token);
+	}
 
-        return $requestToken->get($this->config->getType());
-    }
+	/**
+	 * 自动获取请求下的Token.
+	 */
+	public function getRequestToken(): string
+	{
+		$requestToken = new RequestToken($this->app);
 
-    public function isRefreshExpired(): bool
-    {
-        if (!$this->token->claims()->has('iat')) {
-            return false;
-        }
-        $now = new DateTimeImmutable();
-        $iat = $this->token->claims()->get('iat');
-        $refresh_ttl = $this->config->getRefreshTTL();
-        $refresh_exp = $iat->modify("{$refresh_ttl} sec");
-        return $now->setTimezone(date_timezone_get($iat)) <= $refresh_exp;
-    }
+		return $requestToken->get($this->config->getType());
+	}
 
-    /**
-     * @var Config
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
+	public function isRefreshExpired(): bool
+	{
+		if (!$this->token->claims()->has('iat')) {
+			return false;
+		}
+		$now = new DateTimeImmutable();
+		$iat = $this->token->claims()->get('iat');
+		$refresh_ttl = $this->config->getRefreshTTL();
+		$refresh_exp = $iat->modify("{$refresh_ttl} sec");
 
-    /**
-     * Token 自动续期
-     *
-     * @param string $token
-     * @param int|string $ttl 秒数
-     */
-    public function automaticRenewalToken(string $token)
-    {
-        $token = $this->parse($token);
+		return $now->setTimezone(date_timezone_get($iat)) <= $refresh_exp;
+	}
 
-        $claims = $token->claims()->all();
-        $jti = $claims['jti'];
-        unset($claims['aud'], $claims['iss'], $claims['jti'], $claims['iat'], $claims['nbf'], $claims['exp'], $claims['sub']);
+	/**
+	 * @var Config
+	 */
+	public function getConfig()
+	{
+		return $this->config;
+	}
 
-        $token = $this->make($jti, $claims);
-        $refreshAt = $this->config->getRefreshTTL();
+	/**
+	 * Token 自动续期
+	 *
+	 * @param int|string $ttl 秒数
+	 */
+	public function automaticRenewalToken(string $token)
+	{
+		$token = $this->parse($token);
 
-        header('Access-Control-Expose-Headers:Renewal-Token,Renewal-Token-RefreshAt');
-        header('Renewal-Token:' . $token->toString());
-        header("Renewal-Token-RefreshAt:{$refreshAt}");
+		$claims = $token->claims()->all();
+		$jti = $claims['jti'];
+		unset($claims['aud'], $claims['iss'], $claims['jti'], $claims['iat'], $claims['nbf'], $claims['exp'], $claims['sub']);
 
-        return $token;
-    }
+		$token = $this->make($jti, $claims);
+		$refreshAt = $this->config->getRefreshTTL();
 
-    public function getClaims()
-    {
-        return $this->token->claims()->all();
-    }
+		header('Access-Control-Expose-Headers:Renewal-Token,Renewal-Token-RefreshAt');
+		header('Renewal-Token:'.$token->toString());
+		header("Renewal-Token-RefreshAt:{$refreshAt}");
 
-    public function getClaim($name)
-    {
-        return $this->token->claims()->get($name);
-    }
+		return $token;
+	}
 
-    protected function init()
-    {
-        $this->resolveConfig();
-        $this->initJwtConfiguration();
-    }
+	public function getClaims()
+	{
+		return $this->token->claims()->all();
+	}
 
-    protected function getStore()
-    {
-        return $this->app->get('jwt')->getStore();
-    }
+	public function getClaim($name)
+	{
+		return $this->token->claims()->get($name);
+	}
 
-    protected function resolveConfig()
-    {
-        $store = $this->getStore();
-        $options = $this->app->config->get("jwt.stores.{$store}.token", []);
+	protected function init()
+	{
+		$this->resolveConfig();
+		$this->initJwtConfiguration();
+	}
 
-        if (!empty($options)) {
-            $this->config = new Config($options);
-        } else {
-            throw new JWTException($store . '应用 Token 配置未完整', 500);
-        }
-    }
+	protected function getStore()
+	{
+		return $this->app->get('jwt')->getStore();
+	}
 
-    protected function getValidateConfig()
-    {
-        return Configuration::forSymmetricSigner(
-            $this->config->getSigner(),
-            $this->config->RSASigner() ? $this->config->getPublicKey() : $this->config->getHamcKey()
-        );
-    }
+	protected function resolveConfig()
+	{
+		$store = $this->getStore();
+		$options = $this->app->config->get("jwt.stores.{$store}.token", []);
+
+		if (!empty($options)) {
+			$this->config = new Config($options);
+		} else {
+			throw new JWTException($store.'应用 Token 配置未完整', 500);
+		}
+	}
+
+	protected function getValidateConfig()
+	{
+		return Configuration::forSymmetricSigner(
+			$this->config->getSigner(),
+			$this->config->RSASigner() ? $this->config->getPublicKey() : $this->config->getHamcKey()
+		);
+	}
 }
